@@ -61,6 +61,13 @@ public abstract class AbstractApplication implements Serializable {
         return source.createStream();
     }
 
+    protected void createSinkTL(DataStream<String> dt) {
+        String sinkClass = config.getString(getConfigKey(BaseConstants.BaseConf.SINK_CLASS), "flink.sink.ConsoleSink");
+        BaseSink sink = (BaseSink) ClassLoaderUtils.newInstance(sinkClass, "sink", getLogger());
+        sink.initialize(config);
+        sink.sinkStreamTL(dt);
+    }
+
     protected void createSinkWC(DataStream<Tuple2<String, Integer>> dt) {
         String sinkClass = config.getString(getConfigKey(BaseConstants.BaseConf.SINK_CLASS), "flink.sink.ConsoleSink");
         BaseSink sink = (BaseSink) ClassLoaderUtils.newInstance(sinkClass, "sink", getLogger());

@@ -32,6 +32,28 @@ public class ConsoleSink extends BaseSink implements Serializable {
         metrics.initialize(config, this.getClass().getSimpleName());
         this.config = config;
     }
+    
+    @Override
+    public void sinkStreamTL(DataStream<String> input) {
+        input.addSink(new RichSinkFunction<String>() {
+            @Override
+            public void open(Configuration parameters) throws Exception {
+                super.open(parameters);
+            }
+
+            @Override
+            public void close() throws Exception {
+                metrics.SaveMetrics();
+            }
+
+            @Override
+            public void invoke(String value, Context context) throws Exception {
+                super.invoke(value, context);
+                calculate("0");
+            }
+        }).setParallelism(config.getInteger(TweetsLatencyConstants.Conf.SINK_THREADS, 1));
+    }
+
 
     @Override
     public void sinkStreamWC(DataStream<Tuple2<String, Integer>> input) {

@@ -21,7 +21,7 @@ import flink.application.trafficmonitoring.TrafficMonitoring;
 import flink.application.trendingtopics.TrendingTopics;
 import flink.application.voipstream.VoIPStream;
 import flink.application.wordcount.WordCount;
-import flink.application.newbench.NewBench;
+import flink.application.tweetslatency.TweetsLatency;
 import flink.util.Configurations;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -77,7 +77,7 @@ public class FlinkRunner {
         driver.addApp("spamfilter", SpamFilter.class);
         driver.addApp("trendingtopics", TrendingTopics.class);
         driver.addApp("voipstream", VoIPStream.class);
-        driver.addApp("newbench", NewBench.class);
+        driver.addApp("tweetslatency", TweetsLatency.class);
         
         driver.addApp("YSB", YSB.class);
     }
