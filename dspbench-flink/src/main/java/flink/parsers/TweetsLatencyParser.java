@@ -35,25 +35,25 @@ public class TweetsLatencyParser extends RichFlatMapFunction<String, TweetsLaten
             metrics.receiveThroughput();
         }
 
-        String[] record = value.split("\t");
-        if (record.length != 4 && record.length != 6) {
+        String[] record = value.split(",");
+        if (record.length != 3 && record.length != 4) {
             out.collect(null);
             return;
         }
 
-        String authorName = record[0];
-        String authorEmail = record[1];
+        int id = Integer.parseInt(record[0]);
+        String authorName = record[1];
         String content = record[2];
-        long createdAtTimestamp = Long.parseLong(record[3]);
 
         TweetsLatencyEvent event;
-        if (record.length == 6) {
-            int duration = Integer.parseInt(record[4]);
-            int chunks = Integer.parseInt(record[5]);
+        if (record.length == 4) {
+            List<int> durations = record[3].split(" ").stream()
+                                                        .map(Integer::parseInt)
+                                                        .collect(Collectors.toList());
 
-            event = new TweetsLatencyEvent(authorName, authorEmail, content, createdAtTimestamp, duration, chunks);
+            event = new TweetsLatencyEvent(id, authorName, content, durations);
         } else {
-            event = new TweetsLatencyEvent(authorName, authorEmail, content, createdAtTimestamp);
+            event = new TweetsLatencyEvent(id, authorName, content);
         }
 
         if (!config.getBoolean(Configurations.METRICS_ONLY_SINK, false)) {
