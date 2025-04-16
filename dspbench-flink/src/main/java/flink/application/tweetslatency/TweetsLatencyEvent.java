@@ -2,6 +2,8 @@ package flink.application.tweetslatency;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.ArrayList;
+
 
 
 public class TweetsLatencyEvent implements Serializable { 
@@ -10,7 +12,7 @@ public class TweetsLatencyEvent implements Serializable {
     private String content;
 
     // Synthetic data
-    private List<int> durations;
+    private List<Integer> durations;
 
     // Generated data
     private List<TweetsLatencyMetadata> metadatas;
@@ -25,7 +27,7 @@ public class TweetsLatencyEvent implements Serializable {
         this.metadatas = new ArrayList();
     }
 
-    public TweetsLatencyEvent(int id, String authorName, String content, List<int> durations) {
+    public TweetsLatencyEvent(int id, String authorName, String content, List<Integer> durations) {
         this.id = id;
         this.authorName = authorName;
         this.content = content;
@@ -51,7 +53,7 @@ public class TweetsLatencyEvent implements Serializable {
         return this.content;
     }
 
-    public List<int> getDurations() {
+    public List<Integer> getDurations() {
         return this.durations;
     }
 

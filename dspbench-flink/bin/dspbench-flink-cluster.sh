@@ -25,4 +25,4 @@ function readProperty() {
     echo $PROPERTY_VALUE
 }
 
-cd ../flink-*/bin/;./flink run -c flink.FlinkRunner $JAR_PATH --app $APP_NAME --config $APP_CONFIG_STR
+./flink-1.20.1/bin/flink run -c flink.FlinkRunner $JAR_PATH --app $APP_NAME --config $APP_CONFIG_STR

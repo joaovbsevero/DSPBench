@@ -14,7 +14,7 @@ public class TweetsLatencyMetadata implements Serializable {
     }
 
     public int getEventId() {
-        return this.id;
+        return this.eventId;
     }
 
     public int getDuration() {

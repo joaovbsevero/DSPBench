@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AppDriver {
 
@@ -21,6 +23,10 @@ public class AppDriver {
 
     public void addApp(String name, Class<? extends AbstractApplication> cls) {
         applications.put(name, new AppDescriptor(cls));
+    }
+
+    public List<String> listApps() {
+        return new ArrayList<String>(this.applications.keySet());
     }
 
     public AppDescriptor getApp(String name) {

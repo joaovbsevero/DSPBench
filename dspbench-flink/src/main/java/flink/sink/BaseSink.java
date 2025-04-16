@@ -34,6 +34,9 @@ public abstract class BaseSink {
     public void sinkStreamWC(DataStream<Tuple2<String, Integer>> dt) {
     }
 
+    public void sinkStreamTL(DataStream<String> input) {
+    }
+
     public void sinkStreamTM(DataStream<Tuple4<Date, Integer, Integer, Integer>> dt) {
     }
 

@@ -1,6 +1,6 @@
 package flink.parsers;
 
-import org.apache.flink.api.common.functions.RichFlatMapFunction;
+import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
@@ -12,7 +12,11 @@ import flink.application.tweetslatency.TweetsLatencyEvent;
 import flink.util.Configurations;
 import flink.util.Metrics;
 
-public class TweetsLatencyParser extends RichFlatMapFunction<String, TweetsLatencyEvent> {
+import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+public class TweetsLatencyParser implements FlatMapFunction<String, TweetsLatencyEvent> {
 
     private static final Logger LOG = LoggerFactory.getLogger(TweetsLatencyParser.class);
 
@@ -27,8 +31,7 @@ public class TweetsLatencyParser extends RichFlatMapFunction<String, TweetsLaten
         this.sourceName = sourceName;
     }
 
-    @Override
-    public void flatMap(String value, Collector<TweetsLatencyEvent>> out) throws Exception {
+    public void flatMap(String value, Collector<TweetsLatencyEvent> out) throws Exception {
         metrics.initialize(config, this.getClass().getSimpleName()+"-"+sourceName);
 
         if (!config.getBoolean(Configurations.METRICS_ONLY_SINK, false)) {
@@ -47,7 +50,7 @@ public class TweetsLatencyParser extends RichFlatMapFunction<String, TweetsLaten
 
         TweetsLatencyEvent event;
         if (record.length == 4) {
-            List<int> durations = record[3].split(" ").stream()
+            List<Integer> durations = Arrays.stream(record[3].split(" "))
                                                         .map(Integer::parseInt)
                                                         .collect(Collectors.toList());
 
@@ -61,14 +64,5 @@ public class TweetsLatencyParser extends RichFlatMapFunction<String, TweetsLaten
         }
 
         out.collect(event);
-    }
-
-    // close method
-    @Override
-    public void close() throws Exception {
-        if (!config.getBoolean(Configurations.METRICS_ONLY_SINK, false)) {
-            metrics.SaveMetrics();
-        }
-    }
-    
+    }       
 }

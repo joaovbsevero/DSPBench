@@ -1,16 +1,22 @@
 package flink.application.tweetslatency;
 
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
+import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import flink.application.AbstractApplication;
 import flink.constants.TweetsLatencyConstants;
@@ -76,8 +82,8 @@ public class TweetsLatency extends AbstractApplication {
                 // If no matching event is found, use default values
                 originalEvent = new TweetsLatencyEvent(
                         metadata.getEventId(),
-                        "unknown", // default authorName
-                        "unknown", // default content
+                        "unknown",
+                        "unknown"
                 );
             }
 
@@ -85,11 +91,11 @@ public class TweetsLatency extends AbstractApplication {
             TweetsLatencyEvent wrappedEvent = new TweetsLatencyEvent(
                     originalEvent.getId(),
                     originalEvent.getAuthorName(),
-                    originalEvent.getContent(),
+                    originalEvent.getContent()
             );
             
             // Add the metadata into the event's list of metadata elements
-            wrappedEvent.addMetadata(metadata);
+            wrappedEvent.getMetadatas().add(metadata);
             return wrappedEvent;
         }
     }
@@ -114,9 +120,7 @@ public class TweetsLatency extends AbstractApplication {
 
     private int parserThreads;
     private int splitterThreads;
-    private int collectorThreads;
     private int reducerThreads;
-    private int formatterThreads;
 
     public TweetsLatency(String appName, Configuration config) {
         super(appName, config);
@@ -126,20 +130,21 @@ public class TweetsLatency extends AbstractApplication {
     public void initialize() {
         this.parserThreads = config.getInteger(TweetsLatencyConstants.Conf.PARSER_THREADS, 1);
         this.splitterThreads = config.getInteger(TweetsLatencyConstants.Conf.SPLITTER_THREADS, 1);
-        this.collectorThreads = config.getInteger(TweetsLatencyConstants.Conf.COLLECTOR_THREADS, 1);
         this.reducerThreads = config.getInteger(TweetsLatencyConstants.Conf.REDUCER_THREADS, 1);
-        this.formatterThreads = config.getInteger(TweetsLatencyConstants.Conf.FORMATTER_THREADS, 1);
     }
 
     @Override
     public StreamExecutionEnvironment buildApplication() {
         env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().setLatencyTrackingInterval(10L);
 
         // Spout
         DataStream<String> spout = createSource("tweetslatency");
 
         // Parser
-        DataStream<TweetsLatencyEvent> parser = tweets.flatMap(new TweetsLatencyParser(this.config, "tweetslatency")).setParallelism(this.parserThreads);
+        DataStream<TweetsLatencyEvent> parser = spout
+            .flatMap(new TweetsLatencyParser(this.config, "tweetslatency"))
+            .setParallelism(this.parserThreads);
 
         // Build map of event ID to events
         Map<Integer, TweetsLatencyEvent> eventLookupMap = new HashMap<>();
@@ -155,7 +160,7 @@ public class TweetsLatency extends AbstractApplication {
         DataStream<TweetsLatencyMetadata> generated = eventsWithMapping.flatMap(new MetadataGenerator(this.config)).setParallelism(this.splitterThreads);
 
         // (2) Process each metadata with a simulated delay.
-        DataStream<TweetsLatencyMetadata> collected = generated.map(new MetadataCollector(this.config)).setParallelism(this.collectorThreads);
+        DataStream<TweetsLatencyMetadata> collected = generated.map(new MetadataCollector(this.config));
 
         // (3) Wrap each metadata into an event (so that we can aggregate).
         DataStream<TweetsLatencyEvent> eventsWrapped = collected.map(new MetadataWrapper(eventLookupMap));
@@ -166,9 +171,8 @@ public class TweetsLatency extends AbstractApplication {
         // (5) Convert the aggregated event to String.
         DataStream<String> formatted = reduced.map(event -> {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.writeValueAsString(event.getElements());
-        })
-        .setParallelism(this.formatterThreads);
+            return mapper.writeValueAsString(event.toString());
+        });
 
         // Sink
         createSinkTL(formatted);
