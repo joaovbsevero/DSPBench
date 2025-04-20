@@ -44,4 +44,3 @@ for i in range(800000):
 
     #calling,called,answerTime,calling;called;answerTime;duration;estabilished
     file.write(CallingNumber+','+CalledNumber+','+AnswerTime.strftime('%Y-%m-%dT%H:%M:%S')+','+CallingNumber+';'+CalledNumber+';'+AnswerTime.strftime('%Y-%m-%dT%H:%M:%S')+';'+str(CallDuration)+';'+CallEstablished+"\n")
-    
