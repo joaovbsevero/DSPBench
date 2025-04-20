@@ -1,13 +1,9 @@
 
 # Created by https://www.toptal.com/developers/gitignore/api/java,intellij,eclipse,maven
 # Edit at https://www.toptal.com/developers/gitignore?templates=java,intellij,eclipse,maven
-**/flink-1.20.1/conf
 **/flink-1.20.1/examples
-**/flink-1.20.1/lib
 **/flink-1.20.1/licenses
 **/flink-1.20.1/log
-**/flink-1.20.1/opt
-**/flink-1.20.1/plugins
 **/flink-1.20.1/*.*
 **/flink-1.20.1/LICENSE
 **/flink-1.20.1/NOTICE

@@ -2,6 +2,7 @@ package flink.sink;
 
 import flink.application.YSB.Aggregate_Event;
 import flink.application.voipstream.CallDetailRecord;
+import flink.application.highprocessingtimevariance.HighProcessingTimeVarianceEvent;
 import flink.constants.*;
 import flink.tools.Rankings;
 import flink.util.Metrics;
@@ -34,8 +35,8 @@ public class ConsoleSink extends BaseSink implements Serializable {
     }
     
     @Override
-    public void sinkStreamTL(DataStream<String> input) {
-        input.addSink(new RichSinkFunction<String>() {
+    public void sinkStreamHPTV(DataStream<HighProcessingTimeVarianceEvent> input) {
+        input.addSink(new RichSinkFunction<HighProcessingTimeVarianceEvent>() {
             @Override
             public void open(Configuration parameters) throws Exception {
                 super.open(parameters);
@@ -47,11 +48,11 @@ public class ConsoleSink extends BaseSink implements Serializable {
             }
 
             @Override
-            public void invoke(String value, Context context) throws Exception {
+            public void invoke(HighProcessingTimeVarianceEvent value, Context context) throws Exception {
                 super.invoke(value, context);
                 calculate("0");
             }
-        }).setParallelism(config.getInteger(TweetsLatencyConstants.Conf.SINK_THREADS, 1));
+        }).setParallelism(config.getInteger(HighProcessingTimeVarianceConstants.Conf.SINK_THREADS, 1));
     }
 
 

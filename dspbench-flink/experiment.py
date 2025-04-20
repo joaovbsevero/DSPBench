@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import time
 
 exec = "stream"
@@ -18,7 +19,6 @@ def start_job(app):
     )
 
 
-
 def stop_cluster():
     os.system("./flink-1.20.1/bin/stop-cluster.sh")
 
@@ -30,24 +30,37 @@ def start_cluster():
 def restart_cluster():
     print("restart cluster")
     stop_cluster()
-    time.sleep(10)
+    time.sleep(5)
     start_cluster()
-    time.sleep(30)
+    time.sleep(5)
 
 
-def time_txt(app, conf, init_time, end_time):
-    print("####################################################################")
-    with open("./txts/" + app + "-" + exec + "-" + str(conf) + ".txt", "w") as f:
-        f.write(str(init_time) + " - " + str(end_time) + "\n")
+def update_path(dataset_path: str):
+    with open("./src/main/resources/config/highprocessingtimevariance.properties") as f:
+        file_content = f.read()
+
+    matched = re.search(
+        r"hptv.highprocessingtimevariance.source.path=(.*+)\n", file_content
+    )
+    if not matched:
+        raise ValueError("Dataset path not found")
+
+    previous = matched.group()
+    replaced_content = file_content.replace(
+        previous, f"hptv.highprocessingtimevariance.source.path={dataset_path}\n"
+    )
+    with open(
+        "./src/main/resources/config/highprocessingtimevariance.properties", "w"
+    ) as f:
+        f.write(replaced_content)
 
 
-for i in range(1, 2):
-    # restart_cluster()
+# start_cluster()
+
+for _ in range(1):
+    restart_cluster()
+    update_path("./data/extreme_uniform.csv")
 
     init_time = datetime.datetime.now()
-    start_job("tweetslatency")
+    start_job("highprocessingtimevariance")
     end_time = datetime.datetime.now()
-
-    time_txt("tweetslatency", 1111, init_time, end_time)
-
-# stop_cluster()

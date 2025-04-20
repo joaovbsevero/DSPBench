@@ -9,6 +9,7 @@ import flink.tools.Rankings;
 import flink.util.ClassLoaderUtils;
 import org.apache.flink.api.java.tuple.*;
 import org.apache.flink.configuration.Configuration;
+import flink.application.highprocessingtimevariance.HighProcessingTimeVarianceEvent;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -61,11 +62,11 @@ public abstract class AbstractApplication implements Serializable {
         return source.createStream();
     }
 
-    protected void createSinkTL(DataStream<String> dt) {
+    protected void createSinkHPTV(DataStream<HighProcessingTimeVarianceEvent> dt) {
         String sinkClass = config.getString(getConfigKey(BaseConstants.BaseConf.SINK_CLASS), "flink.sink.ConsoleSink");
         BaseSink sink = (BaseSink) ClassLoaderUtils.newInstance(sinkClass, "sink", getLogger());
         sink.initialize(config);
-        sink.sinkStreamTL(dt);
+        sink.sinkStreamHPTV(dt);
     }
 
     protected void createSinkWC(DataStream<Tuple2<String, Integer>> dt) {
