@@ -25,10 +25,6 @@ public class AppDriver {
         applications.put(name, new AppDescriptor(cls));
     }
 
-    public List<String> listApps() {
-        return new ArrayList<String>(this.applications.keySet());
-    }
-
     public AppDescriptor getApp(String name) {
         return applications.get(name);
     }
