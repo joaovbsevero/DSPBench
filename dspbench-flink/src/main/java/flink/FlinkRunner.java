@@ -100,8 +100,6 @@ public class FlinkRunner {
             LOG.error("Unable to load configuration file", ex);
             throw new RuntimeException("Unable to load configuration file", ex);
         }
-        LOG.info("Available applications: {}", driver.listApps());  
-        LOG.info("Requested application: {}", application);
         
         // Get the descriptor for the given application
         AppDriver.AppDescriptor app = driver.getApp(application);
