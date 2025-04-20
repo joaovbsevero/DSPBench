@@ -7,9 +7,6 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
-
-
-
 public class FileSource extends BaseSource {
     private String sourcePath;
     private int sourceThreads;
