@@ -59,7 +59,7 @@ def update_path(dataset_path: str):
 
 for _ in range(1):
     restart_cluster()
-    update_path("./data/extreme_uniform.csv")
+    update_path("./data/highvariance.csv")
 
     init_time = datetime.datetime.now()
     start_job("highprocessingtimevariance")

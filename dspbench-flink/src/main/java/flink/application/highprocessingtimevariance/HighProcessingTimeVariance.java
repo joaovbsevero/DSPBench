@@ -93,22 +93,19 @@ public class HighProcessingTimeVariance extends AbstractApplication {
         // (1) Generate metadata
         DataStream<HighProcessingTimeVarianceMetadata> generated = parser
             .flatMap(new MetadataGenerator())
-            .name("MetadataGenerator")
-            .setParallelism(this.parserThreads);
+            .name("MetadataGenerator");
 
         // (2) Collect metadata (simulated delay)
         DataStream<HighProcessingTimeVarianceEvent> collected = generated
             .map(new MetadataCollector())
             .name("MetadataCollector")
-            .setParallelism(this.collectorThreads)
             .startNewChain();
 
         // (3) Keyed reduce
         DataStream<HighProcessingTimeVarianceEvent> reduced = collected
             .keyBy(HighProcessingTimeVarianceEvent::getId)
             .reduce(new MetadataReducer())
-            .name("EventReducer")
-            .setParallelism(this.reducerThreads);
+            .name("EventReducer");
 
         // Sink
         createSinkHPTV(reduced);
