@@ -13,6 +13,7 @@ FAST_THREADS = 0  # number of fast-task workers
 SLOW_THREADS = 0  # number of slow-task workers
 THRESHOLD = -1
 FOLDER = pathlib.Path()
+SNAPSHOTS = 5
 
 # Queues for inter-stage communication
 fast_queue = queue.Queue()
@@ -45,7 +46,6 @@ slow_no_bp_time = 0.0
 
 start_time = time.time()
 last_change = last_change_fast = last_change_slow = start_time
-last_state = fast_last_state = slow_last_state = False
 
 
 def bp_monitor(sample_interval=0.05):
@@ -53,14 +53,11 @@ def bp_monitor(sample_interval=0.05):
         bp_time, \
         no_bp_time, \
         last_change, \
-        last_state, \
         fast_bp_time, \
         fast_no_bp_time, \
         last_change_fast, \
-        fast_last_state, \
         slow_bp_time, \
         slow_no_bp_time, \
-        slow_last_state, \
         last_change_slow
 
     while True:
@@ -70,47 +67,49 @@ def bp_monitor(sample_interval=0.05):
 
         # 1) overall
         overall_in_bp = (fast_queue.qsize() + slow_queue.qsize()) > 0
-        if overall_in_bp != last_state:
-            delta = now - last_change
-            if last_state:
-                bp_time += delta
-            else:
-                no_bp_time += delta
-            last_change = now
-            last_state = overall_in_bp
+        delta = now - last_change
+        if overall_in_bp:
+            bp_time += delta
+        else:
+            no_bp_time += delta
+        last_change = now
 
         # 2) fast queue only
         fast_in_bp = fast_queue.qsize() > 0
-        if fast_in_bp != fast_last_state:
-            delta = now - last_change_fast
-            if fast_last_state:
-                fast_bp_time += delta
-            else:
-                fast_no_bp_time += delta
-            last_change_fast = now
-            fast_last_state = fast_in_bp
+        delta = now - last_change_fast
+        if fast_in_bp:
+            fast_bp_time += delta
+        else:
+            fast_no_bp_time += delta
+        last_change_fast = now
 
         # 3) slow queue only
         slow_in_bp = slow_queue.qsize() > 0
-        if slow_in_bp != slow_last_state:
-            delta = now - last_change_slow
-            if slow_last_state:
-                slow_bp_time += delta
-            else:
-                slow_no_bp_time += delta
-            last_change_slow = now
-            slow_last_state = slow_in_bp
+        delta = now - last_change_slow
+        if slow_in_bp:
+            slow_bp_time += delta
+        else:
+            slow_no_bp_time += delta
+        last_change_slow = now
 
 
 def stat_printer():
     global \
+        finish_event, \
         slow_steals, \
         fast_steals, \
         fast_recv_counts, \
         fast_sent_counts, \
         slow_recv_counts, \
-        slow_sent_counts
+        slow_sent_counts, \
+        slow_bp_time, \
+        slow_no_bp_time, \
+        bp_time, \
+        no_bp_time, \
+        fast_bp_time, \
+        fast_no_bp_time
 
+    count = 0
     while not finish_event:
         time.sleep(30)
 
@@ -149,7 +148,7 @@ def stat_printer():
             "------------------------\n"
             f"  Overall throughput : {overall_throughput}\n"
             f"  Fast throughput    : {fast_throughput}\n"
-            f"  Slow throughput    : {slow_throughput}"
+            f"  Slow throughput    : {slow_throughput}\n"
             "------------------------\n"
         )
         with open(FOLDER / f"{timestamp}.txt", "w") as f:
@@ -157,6 +156,9 @@ def stat_printer():
 
         fast_steals = 0
         slow_steals = 0
+        count += 1
+        if count >= SNAPSHOTS:
+            finish_event = True
 
 
 def parser_generator(events: list[str]):
@@ -190,7 +192,6 @@ def fast_worker():
                 reducer_queue.put_nowait(item)
                 continue
 
-            fast_recv_counts += 1
             # print("Fast received event")
         except queue.Empty:
             try:
@@ -199,7 +200,6 @@ def fast_worker():
                     reducer_queue.put_nowait(item)
                     continue
 
-                fast_recv_counts += 1
                 slow_steals += 1
                 # print("Fast stole event")
             except queue.Empty:
@@ -207,6 +207,7 @@ def fast_worker():
                     break
                 continue
 
+        fast_recv_counts += 1
         time.sleep(item[1] / 1000)
         reducer_queue.put_nowait(item)
         # print("Fast added event to reducer")
@@ -293,15 +294,15 @@ def run(
         events = f.readlines()
 
     threading.Thread(target=bp_monitor, daemon=True).start()
-    threading.Thread(target=stat_printer, daemon=True).start()
+    threading.Thread(target=stat_printer, daemon=False).start()
 
     for _ in range(FAST_THREADS):
-        threading.Thread(target=fast_worker, daemon=False).start()
+        threading.Thread(target=fast_worker, daemon=True).start()
 
     for _ in range(SLOW_THREADS):
-        threading.Thread(target=slow_worker, daemon=False).start()
+        threading.Thread(target=slow_worker, daemon=True).start()
 
-    threading.Thread(target=reducer_worker, daemon=False).start()
+    threading.Thread(target=reducer_worker, daemon=True).start()
 
     parser_generator(events)
 
