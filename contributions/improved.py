@@ -48,7 +48,7 @@ start_time = time.time()
 last_change = last_change_fast = last_change_slow = start_time
 
 
-def bp_monitor(sample_interval=0.05):
+def bp_monitor(sample_interval=2):
     global \
         bp_time, \
         no_bp_time, \
@@ -187,7 +187,7 @@ def fast_worker():
 
     while True:
         try:
-            item = fast_queue.get_nowait()
+            item = fast_queue.get(timeout=5)
             if item is None:
                 reducer_queue.put_nowait(item)
                 continue
@@ -195,7 +195,7 @@ def fast_worker():
             # print("Fast received event")
         except queue.Empty:
             try:
-                item = slow_queue.get_nowait()
+                item = slow_queue.get(timeout=5)
                 if item is None:
                     reducer_queue.put_nowait(item)
                     continue
@@ -221,7 +221,7 @@ def slow_worker():
 
     while True:
         try:
-            item = slow_queue.get_nowait()
+            item = slow_queue.get(timeout=5)
             if item is None:
                 reducer_queue.put_nowait(item)
                 continue
@@ -229,7 +229,7 @@ def slow_worker():
             # print("Slow received event")
         except queue.Empty:
             try:
-                item = fast_queue.get_nowait()
+                item = fast_queue.get(timeout=5)
                 if item is None:
                     reducer_queue.put_nowait(item)
                     continue
@@ -272,17 +272,17 @@ def reducer_worker():
 def run(
     fast_thread_count: int = typer.Option(..., "--fast-count"),
     slow_thread_count: int = typer.Option(..., "--slow-count"),
-    threashold: float = typer.Option(..., "-t"),
+    threshold: int = typer.Option(..., "-t"),
 ):
     global FAST_THREADS, SLOW_THREADS, THRESHOLD, FOLDER
 
     FAST_THREADS = fast_thread_count
     SLOW_THREADS = slow_thread_count
-    THRESHOLD = threashold
+    THRESHOLD = threshold
 
     FOLDER = (
         pathlib.Path(__file__).parent
-        / f"run-{fast_thread_count}fast-{slow_thread_count}slow-{threashold}threashold"
+        / f"run-{fast_thread_count}fast-{slow_thread_count}slow-{threshold}threshold"
     )
     if not FOLDER.exists():
         FOLDER.mkdir(parents=True, exist_ok=True)

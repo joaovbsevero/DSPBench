@@ -1,0 +1,17 @@
+------------------------
+  Parser       - Sent: 448940
+  Fast Workers - Recv: 447 | Sent: 437
+  Slow Workers - Recv: 79 | Sent: 73
+  Reducer      - Recv: 510
+------------------------
+  Overall back-pressure : 118.01s (100.0%)
+  Fast back-pressure    : 118.01s (100.0%)
+  Slow back-pressure    : 118.01s (100.0%)
+------------------------
+  Fast steals: 0
+  Slow steals: 0
+------------------------
+  Overall throughput : 4.249629670367694
+  Fast throughput    : 3.6413493450013377
+  Slow throughput    : 0.6082803253663562
+------------------------

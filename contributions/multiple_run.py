@@ -2,7 +2,7 @@ import subprocess
 from multiprocessing import Pool
 
 
-def run_batch(batch: list[tuple[int, int]], threashold):
+def run_batch(batch: list[tuple[int, int]], threshold):
     cmds = []
     for config in batch:
         cmds.append(
@@ -14,7 +14,7 @@ def run_batch(batch: list[tuple[int, int]], threashold):
                 "--slow-count",
                 str(config[1]),
                 "-t",
-                str(threashold),
+                str(threshold),
             ]
         )
 
@@ -23,7 +23,7 @@ def run_batch(batch: list[tuple[int, int]], threashold):
 
 
 if __name__ == "__main__":
-    threasholds = [1000, 3000, 6000, 8000]
+    thresholds = [1000, 3000, 6000, 8000]
 
     config_batchs = [
         [
@@ -53,6 +53,6 @@ if __name__ == "__main__":
         ],
     ]
 
-    for threashold in threasholds:
+    for threshold in thresholds:
         for config_batch in config_batchs:
-            run_batch(config_batch, threashold)
+            run_batch(config_batch, threshold)
