@@ -10,6 +10,7 @@ app = typer.Typer()
 # Settings
 NUM_COLLECTORS = 0  # parallelism for the "collect" stage
 FOLDER = pathlib.Path()
+SNAPSHOTS = 5
 
 # Queues for inter-stage communication
 collector_queue = queue.Queue()
@@ -32,7 +33,18 @@ last_state = False
 
 
 def stat_printer():
-    while True:
+    global \
+        finish_event, \
+        parser_sent_counts, \
+        collector_recv_counts, \
+        collector_sent_counts, \
+        reducer_recv_count, \
+        bp_time, \
+        pct_bp, \
+        overall_throughput
+
+    count = 0
+    while not finish_event:
         time.sleep(30)
 
         timestamp = time.time()
@@ -57,8 +69,12 @@ def stat_printer():
         with open(FOLDER / f"{timestamp}.txt", "w") as f:
             f.write(log)
 
+        count += 1
+        if count >= SNAPSHOTS:
+            finish_event = True
 
-def bp_monitor(sample_interval=0.05):
+
+def bp_monitor(sample_interval=2):
     global bp_time, no_bp_time, last_change, last_state
 
     while True:
@@ -161,12 +177,12 @@ def run(threads: int = typer.Option(..., "-t")):
         events = f.readlines()
 
     threading.Thread(target=bp_monitor, daemon=True).start()
-    threading.Thread(target=stat_printer, daemon=True).start()
+    threading.Thread(target=stat_printer, daemon=False).start()
 
     for i in range(NUM_COLLECTORS):
-        threading.Thread(target=collector_worker).start()
+        threading.Thread(target=collector_worker, daemon=True).start()
 
-    threading.Thread(target=reducer_worker).start()
+    threading.Thread(target=reducer_worker, daemon=True).start()
 
     parser_generator(events)
 

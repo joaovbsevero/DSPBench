@@ -145,6 +145,7 @@ def plot(df: pd.DataFrame):
     # 1. Throughput over time per threshold
     for thr in thresholds:
         plt.close("all")
+
         fig, ax = plt.subplots()
         for _, row in combos.iterrows():
             ft, st, tot = row.fast_threads, row.slow_threads, row.total_threads
@@ -163,15 +164,16 @@ def plot(df: pd.DataFrame):
                 marker=get_marker(ft, st),
                 label=f"{ft}F/{st}S ({tot} total)",
             )
-        ax.set_title(f"Overall Throughput (Threshold={thr})")
+        ax.set_title(f"Overall Throughput (Threshold={thr/1000}s)")
         ax.set_xlabel("Time")
         ax.set_ylabel("Records/sec")
         regroup_legend(ax)
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f"new_plots/Overall Throughput (Threshold={thr/1000}s).png")
 
     # 2. Fast vs Slow throughput at median threshold
     plt.close("all")
+
     mid = thresholds[len(thresholds) // 2]
     sub = df[df["threshold"] == mid].sort_values("time")
     fig, ax = plt.subplots()
@@ -181,12 +183,12 @@ def plot(df: pd.DataFrame):
     ax.plot(
         sub["time"], sub["slow_throughput"], marker="s", linestyle="--", label="Slow"
     )
-    ax.set_title(f"Fast vs Slow Throughput (Threshold={mid})")
+    ax.set_title(f"Fast vs Slow Throughput (Threshold={mid/1000}s)")
     ax.set_xlabel("Time")
     ax.set_ylabel("Records/sec")
     ax.legend()
     plt.tight_layout()
-    plt.show()
+    plt.savefig(f"new_plots/Fast vs Slow Throughput (Threshold={mid/1000}s).png")
 
     # 3. Backpressure % over time per threshold
     for thr in thresholds:
@@ -207,12 +209,12 @@ def plot(df: pd.DataFrame):
             linestyle="-.",
             label="Slow BP %",
         )
-        ax.set_title(f"Backpressure % (Threshold={thr})")
+        ax.set_title(f"Backpressure % (Threshold={thr/1000}s)")
         ax.set_xlabel("Time")
         ax.set_ylabel("%")
         ax.legend()
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f"new_plots/Backpressure % (Threshold={thr/1000}s).png")
 
     # 4. Final throughput vs threshold
     plt.close("all")
@@ -240,7 +242,7 @@ def plot(df: pd.DataFrame):
     ax.set_ylabel("Records/sec")
     regroup_legend(ax)
     plt.tight_layout()
-    plt.show()
+    plt.savefig("new_plots/Final Throughput vs Threshold.png")
 
     # 5. Total steals over time per threshold
     for thr in thresholds:
@@ -264,16 +266,18 @@ def plot(df: pd.DataFrame):
                 marker=get_marker(ft, st),
                 label=f"{ft}F/{st}S ({tot} total)",
             )
-        ax.set_title(f"Total Steals over Time (Threshold={thr})")
+        ax.set_title(f"Total Steals over Time (Threshold={thr/1000}s)")
         ax.set_xlabel("Time")
         ax.set_ylabel("Number of Steals")
         regroup_legend(ax)
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f"new_plots/Total Steals over Time (Threshold={thr/1000}s).png")
 
 
 def main():
-    df = collect_data(".")
+    import pathlib
+    
+    df = collect_data(str(pathlib.Path(__file__).parent))
     if df.empty:
         print("No data found.")
         return

@@ -1,0 +1,8 @@
+------------------------
+  Parser     - Sent: 448940
+  Collectors - Recv: 103 | Sent: 95
+  Reducer    - Recv: 95
+------------------------
+  Back-pressure : 0.00s (0.0%)
+  Throughput    : 1.481410252987928
+------------------------
